@@ -1,0 +1,148 @@
+{
+	"name": "PL_ADF Assignment_1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": {
+								"value": "@pipeline().parameters.Source_Directory_Name",
+								"type": "Expression"
+							},
+							"wildcardFileName": "*",
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "SqlDWSink",
+						"allowPolyBase": true,
+						"polyBaseSettings": {
+							"rejectValue": 0,
+							"rejectType": "value",
+							"useTypeDefault": true
+						},
+						"disableMetricsCollection": true
+					},
+					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "linkedservicestorage",
+							"type": "LinkedServiceReference"
+						},
+						"path": "sa-iris-assignment/STAGING_FOLDER"
+					},
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "ID",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ID",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "NAME",
+									"type": "String"
+								},
+								"sink": {
+									"name": "NAME",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "Subject",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Subject",
+									"type": "String"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADF_ASSIGNMENT_SOURCE_1_WITH_SOURCE_HEADER",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "dt_synapse_sql_generic",
+						"type": "DatasetReference",
+						"parameters": {
+							"Schema": {
+								"value": "@pipeline().parameters.Schema",
+								"type": "Expression"
+							},
+							"Table_Name": {
+								"value": "@pipeline().parameters.Table_Name",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"Source_Directory_Name": {
+				"type": "string",
+				"defaultValue": "ADF_ASSIGNMENT_1_SOURCE_FOLDER"
+			},
+			"Source_File_Name": {
+				"type": "string"
+			},
+			"Source_Container_Name": {
+				"type": "string",
+				"defaultValue": "sa-iris-assignment"
+			},
+			"Target_Directory_Name": {
+				"type": "string",
+				"defaultValue": "ADF_ASSIGNMENT_1_TARGET_FOLDER"
+			},
+			"Target_Container_Name": {
+				"type": "string",
+				"defaultValue": "sa-iris-assignment"
+			},
+			"Schema": {
+				"type": "string",
+				"defaultValue": "dbo"
+			},
+			"Table_Name": {
+				"type": "string",
+				"defaultValue": "adf_assignment_1_target"
+			}
+		},
+		"folder": {
+			"name": "PL_IRIS_ASSIGNMENT"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-01T12:23:09Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

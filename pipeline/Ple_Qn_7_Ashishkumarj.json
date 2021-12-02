@@ -1,0 +1,43 @@
+{
+	"name": "Ple_Qn_7_Ashishkumarj",
+	"properties": {
+		"activities": [
+			{
+				"name": "Data flow1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "Dfw_Qn_7_Ashishkumarj",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"sink1": {
+								"Directory_Name": "Question_7_Target_Folder",
+								"Container_Name": "sa-iris-assignment"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"folder": {
+			"name": "Assignment"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-01T17:06:06Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

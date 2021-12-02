@@ -1,0 +1,53 @@
+{
+	"name": "Ple_Qn_3_Ashishkumarj",
+	"properties": {
+		"activities": [
+			{
+				"name": "Data flow1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "Dfw_Qn_3_Ashishkumarj",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"source1": {
+								"Directory_Name": "input",
+								"File_Name_Pattern": "Loans_16nov2021.csv",
+								"Container_Name": "sa-iris-assignment"
+							},
+							"source2": {
+								"Directory_Name": "input",
+								"File_Name_Pattern": "Loans_16nov2021.csv",
+								"Container_Name": "sa-iris-assignment"
+							},
+							"targetsink": {
+								"Schema": "dbo",
+								"Table_Name": "Loan_Indicator"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"folder": {
+			"name": "Assignment"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-01T16:27:47Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

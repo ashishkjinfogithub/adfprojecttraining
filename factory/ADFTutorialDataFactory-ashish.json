@@ -1,0 +1,9 @@
+{
+	"name": "ADFTutorialDataFactory-ashish",
+	"location": "centralindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "280bd9dc-2987-4b81-9122-32cd173dc3eb",
+		"tenantId": "f3e6a2bb-5fbf-4d58-81fb-a55ec2ba020b"
+	}
+}

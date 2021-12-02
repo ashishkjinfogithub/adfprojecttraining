@@ -1,0 +1,224 @@
+{
+	"name": "Ple_Qn_4_Ashishkumarj",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata1",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "dt_csv_Generic_for_Target_without_header",
+						"type": "DatasetReference",
+						"parameters": {
+							"Directory_Name": {
+								"value": "@pipeline().parameters.Directory",
+								"type": "Expression"
+							},
+							"Container_Name": {
+								"value": "@pipeline().parameters.Container",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata1').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Get Metadata2",
+							"type": "GetMetadata",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "dt_csv_Generic_for_Source_with_header",
+									"type": "DatasetReference",
+									"parameters": {
+										"Directory_Name": {
+											"value": "@pipeline().parameters.Directory",
+											"type": "Expression"
+										},
+										"File_Name_Pattern": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"Container_Name": {
+											"value": "@pipeline().parameters.Container",
+											"type": "Expression"
+										}
+									}
+								},
+								"fieldList": [
+									"exists",
+									"lastModified",
+									"size"
+								],
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"modifiedDatetimeEnd": {
+										"value": "@adddays(utcnow(),-1)",
+										"type": "Expression"
+									},
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							}
+						},
+						{
+							"name": "If Condition1",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Get Metadata2",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@and(activity('Get Metadata2').output.exists,equals(activity('Get Metadata2').output.size,0))\n",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Web1",
+										"type": "WebActivity",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"url": "https://prod-10.eastasia.logic.azure.com:443/workflows/852b4c2e45704181b6ee14e06d48d163/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=82Cp03bSGl9ioID4SFZo1gmSon_tbp5P6koOnUHc2dM",
+											"method": "POST",
+											"body": {
+												"value": "{\n\"Pipeline_Name\":\"ss\",\n\"developerName\":\"ashish\"\n}",
+												"type": "Expression"
+											}
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Data flow1",
+										"type": "ExecuteDataFlow",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "1.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"dataflow": {
+												"referenceName": "Dfw_Qn_3_Ashishkumarj",
+												"type": "DataFlowReference",
+												"datasetParameters": {
+													"source1": {
+														"Directory_Name": "input",
+														"File_Name_Pattern": "Loans_16nov2021.csv",
+														"Container_Name": "sa-iris-assignment"
+													},
+													"source2": {
+														"Directory_Name": "input",
+														"File_Name_Pattern": "Loans_16nov2021.csv",
+														"Container_Name": "sa-iris-assignment"
+													},
+													"targetsink": {
+														"Schema": "dbo",
+														"Table_Name": "Loan_Indicator"
+													}
+												}
+											},
+											"compute": {
+												"coreCount": 8,
+												"computeType": "General"
+											},
+											"traceLevel": "Fine"
+										}
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"Container": {
+				"type": "string",
+				"defaultValue": "sa-iris-assignment"
+			},
+			"Directory": {
+				"type": "string",
+				"defaultValue": "input"
+			}
+		},
+		"variables": {
+			"avc": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Assignment"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-02T05:38:14Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

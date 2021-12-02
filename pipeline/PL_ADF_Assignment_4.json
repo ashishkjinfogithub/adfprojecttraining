@@ -1,0 +1,291 @@
+{
+	"name": "PL_ADF_Assignment_4",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata1",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "dt_csv_Generic_for_Source_without_header",
+						"type": "DatasetReference",
+						"parameters": {
+							"Directory_Name": {
+								"value": "@pipeline().parameters.directory_name",
+								"type": "Expression"
+							},
+							"File_Name_Pattern": {
+								"value": "@pipeline().parameters.File_name",
+								"type": "Expression"
+							},
+							"Container_Name": {
+								"value": "@pipeline().parameters.Container_name",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"exists",
+						"itemName"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "If Condition1",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@activity('Get Metadata1').output.exists",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "false copy",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"additionalColumns": [
+										{
+											"name": "File_Status",
+											"value": {
+												"value": "'file is not present'",
+												"type": "Expression"
+											}
+										}
+									],
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "AzureSqlSink"
+								},
+								"enableStaging": false,
+								"dataIntegrationUnits": 2,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "File_Status"
+											},
+											"sink": {
+												"name": "File_error_Details",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										}
+									],
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "dt_azure_sql_server_generic",
+									"type": "DatasetReference",
+									"parameters": {
+										"Schema": "dbo",
+										"Table_Name": "File_error_Details"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "dt_azure_sql_server_generic",
+									"type": "DatasetReference",
+									"parameters": {
+										"Schema": "dbo",
+										"Table_Name": "File_error_Details"
+									}
+								}
+							]
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "true copy",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "SqlDWSink",
+									"allowPolyBase": true,
+									"polyBaseSettings": {
+										"rejectValue": 0,
+										"rejectType": "value",
+										"useTypeDefault": true
+									}
+								},
+								"enableStaging": true,
+								"stagingSettings": {
+									"linkedServiceName": {
+										"referenceName": "linkedservicestorage",
+										"type": "LinkedServiceReference"
+									},
+									"path": "sa-iris-assignment/ADF_ASSIGNMENT_4_TARGET_FOLDER"
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "ID",
+												"type": "Int16"
+											},
+											"sink": {
+												"name": "Id",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "NAME",
+												"type": "String"
+											},
+											"sink": {
+												"name": "NAME",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "Subject",
+												"type": "String"
+											},
+											"sink": {
+												"name": "Subject",
+												"type": "String"
+											}
+										}
+									]
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "dt_csv_Generic_for_Source_with_header",
+									"type": "DatasetReference",
+									"parameters": {
+										"Directory_Name": {
+											"value": "@pipeline().parameters.directory_name",
+											"type": "Expression"
+										},
+										"File_Name_Pattern": {
+											"value": "@pipeline().parameters.File_name",
+											"type": "Expression"
+										},
+										"Container_Name": {
+											"value": "@pipeline().parameters.Container_name",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "dt_synapse_sql_generic",
+									"type": "DatasetReference",
+									"parameters": {
+										"Schema": {
+											"value": "@pipeline().parameters.Target_Schema",
+											"type": "Expression"
+										},
+										"Table_Name": {
+											"value": "@pipeline().parameters.Target_Table_Name",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"Container_name": {
+				"type": "string",
+				"defaultValue": "sa-iris-assignment"
+			},
+			"File_name": {
+				"type": "string",
+				"defaultValue": "Emp2.csv"
+			},
+			"directory_name": {
+				"type": "string",
+				"defaultValue": "ADF_ASSIGNMENT_1_SOURCE_FOLDER"
+			},
+			"Target_Schema": {
+				"type": "string",
+				"defaultValue": "dbo"
+			},
+			"Target_Table_Name": {
+				"type": "string",
+				"defaultValue": "Employee"
+			}
+		},
+		"folder": {
+			"name": "PL_IRIS_ASSIGNMENT"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-01T15:48:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

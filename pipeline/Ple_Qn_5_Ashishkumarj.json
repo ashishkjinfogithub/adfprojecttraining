@@ -1,0 +1,242 @@
+{
+	"name": "Ple_Qn_5_Ashishkumarj",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata_customer_address",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "dt_csv_Generic_for_Source_with_header",
+						"type": "DatasetReference",
+						"parameters": {
+							"Directory_Name": "Question_5_Source_Folder",
+							"File_Name_Pattern": "customer_address.csv",
+							"Container_Name": {
+								"value": "sa-iris-assignment",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"itemName",
+						"columnCount"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "If Condition1",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata_customer_address",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('Get Metadata_customer_address').output.columnCount,5)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Set variable1_copy1",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "customer_address_column_result",
+								"value": {
+									"value": "'File do not have 5 columns'",
+									"type": "Expression"
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Set variable1",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "customer_address_column_result",
+								"value": {
+									"value": "'file has 5 columns'",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "If Condition1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"additionalColumns": [
+							{
+								"name": "Result",
+								"value": {
+									"value": "@variables('customer_address_column_result')",
+									"type": "Expression"
+								}
+							},
+							{
+								"name": "Source",
+								"value": {
+									"value": "@activity('Get Metadata_customer_address').output.itemName",
+									"type": "Expression"
+								}
+							},
+							{
+								"name": "Validation_Rule",
+								"value": {
+									"value": "'check if source has a 5 columns'",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "Result",
+									"type": "String"
+								},
+								"sink": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 1
+								}
+							},
+							{
+								"source": {
+									"name": "Source",
+									"type": "String"
+								},
+								"sink": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 2
+								}
+							},
+							{
+								"source": {
+									"name": "Validation_Rule",
+									"type": "String"
+								},
+								"sink": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 3
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "dt_csv_Generic_for_Source_without_header",
+						"type": "DatasetReference",
+						"parameters": {
+							"Directory_Name": "Question_11_Folder",
+							"File_Name_Pattern": "question_11_Source.txt",
+							"Container_Name": "sa-iris-assignment"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "dt_csv_Generic_for_Source_without_header",
+						"type": "DatasetReference",
+						"parameters": {
+							"Directory_Name": "question_5_target",
+							"File_Name_Pattern": "question_5_output.csv",
+							"Container_Name": "sa-iris-assignment"
+						}
+					}
+				]
+			}
+		],
+		"variables": {
+			"customer_address_column_result": {
+				"type": "String"
+			},
+			"customer_vaccition_details_column_result": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Assignment"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-01T16:56:26Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

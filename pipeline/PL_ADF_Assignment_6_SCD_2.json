@@ -1,0 +1,56 @@
+{
+	"name": "PL_ADF_Assignment_6_SCD_2",
+	"properties": {
+		"activities": [
+			{
+				"name": "Data flow1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_ADF_ASSIGNMNET_6_SCD_2",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"source1": {
+								"Directory_Name": "ADF_ASSIGNMENT_6_SOURCE_FOLDER",
+								"File_Name_Pattern": "ap_phone_20211124122211.dat",
+								"Container_Name": "sa-iris-assignment"
+							},
+							"source2": {
+								"Schema": "dbo",
+								"Table_Name": "ap_merchant_phone"
+							},
+							"sink1": {
+								"Schema": "dbo",
+								"Table_Name": "ap_merchant_phone"
+							},
+							"sink2": {
+								"Schema": "dbo",
+								"Table_Name": "ap_merchant_phone"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"folder": {
+			"name": "PL_IRIS_ASSIGNMENT"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-01T14:08:17Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

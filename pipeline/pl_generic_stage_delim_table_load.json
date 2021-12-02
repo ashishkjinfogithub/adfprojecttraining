@@ -1,0 +1,385 @@
+{
+	"name": "pl_generic_stage_delim_table_load",
+	"properties": {
+		"activities": [
+			{
+				"name": "job_run_details",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT * FROM DBO.JOBS_RUN_DETAILS WHERE JOB_NAME='@{pipeline().parameters.job_name}'",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "dt_azure_sql_Server_generic_without_param",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": true
+				}
+			},
+			{
+				"name": "Merchant Source file Details",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "job_run_details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "dt_csv_Generic_for_Source_without_header",
+						"type": "DatasetReference",
+						"parameters": {
+							"Directory_Name": {
+								"value": "@activity('job_run_details').output.firstRow.Source_file_folder",
+								"type": "Expression"
+							},
+							"File_Name_Pattern": {
+								"value": "@activity('job_run_details').output.firstRow.Source_file_name_pattern",
+								"type": "Expression"
+							},
+							"Container_Name": {
+								"value": "@activity('job_run_details').output.firstRow.Source_file_container",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Merchant Source file Details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Merchant Source file Details').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Merchant_Staging_table_load",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": {
+										"value": "TRUNCATE TABLE @{activity('job_run_details').output.firstRow.Staging_Schema_Name}.@{activity('job_run_details').output.firstRow.Staging_Table_Name}",
+										"type": "Expression"
+									},
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"type": "String",
+												"ordinal": 1
+											},
+											"sink": {
+												"name": "all_columns",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										}
+									],
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "dt_csv_Generic_for_Source_without_header",
+									"type": "DatasetReference",
+									"parameters": {
+										"Directory_Name": {
+											"value": "@activity('job_run_details').output.firstRow.source_file_folder",
+											"type": "Expression"
+										},
+										"File_Name_Pattern": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"Container_Name": {
+											"value": "@activity('job_run_details').output.firstRow.Source_file_container",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "dt_azure_sql_server_generic",
+									"type": "DatasetReference",
+									"parameters": {
+										"Schema": {
+											"value": "@activity('job_run_details').output.firstRow.Staging_Schema_Name",
+											"type": "Expression"
+										},
+										"Table_Name": {
+											"value": "@activity('job_run_details').output.firstRow.Staging_Table_Name",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "merchant_Delim_table_load",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Merchant_Staging_table_load",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": {
+									"value": "@activity('job_run_details').output.firstRow.Delim_load_store_proc",
+									"type": "Expression"
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Merchant Target table insert update Stored procedure1",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "merchant_Delim_table_load",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": {
+									"value": "@activity('job_run_details').output.firstRow.Target_load_store_proc",
+									"type": "Expression"
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Pipeline run Status update",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Merchant Target table insert update Stored procedure1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[sp_pipeline_run_Status]",
+								"storedProcedureParameters": {
+									"DataFactory": {
+										"value": {
+											"value": "@pipeline().DataFactory",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"GroupId": {
+										"value": {
+											"value": "@pipeline().GroupId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"jobid": {
+										"value": {
+											"value": "@activity('job_run_details').output.firstRow.Job_id",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"jobname": {
+										"value": {
+											"value": "@activity('job_run_details').output.firstRow.Job_name",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"Pipeline": {
+										"value": {
+											"value": "@pipeline().Pipeline",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"RunId": {
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TriggeredByPipelineName": {
+										"value": {
+											"value": "@pipeline()?.TriggeredByPipelineName",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TriggeredByPipelineRunId": {
+										"value": {
+											"value": "@pipeline()?.TriggeredByPipelineRunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TriggerId": {
+										"value": {
+											"value": "@pipeline().TriggerId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TriggerName": {
+										"value": {
+											"value": "@pipeline().TriggerName",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TriggerTime": {
+										"value": {
+											"value": "@pipeline().TriggerTime",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TriggerType": {
+										"value": {
+											"value": "@pipeline().TriggerType",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"job_name": {
+				"type": "string",
+				"defaultValue": "ap_merchant_office"
+			}
+		},
+		"folder": {
+			"name": "Demo_Client_Project_Pipeline"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-02T05:38:14Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

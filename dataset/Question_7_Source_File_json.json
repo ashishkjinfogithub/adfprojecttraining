@@ -1,0 +1,66 @@
+{
+	"name": "Question_7_Source_File_json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "linkedservicestorage",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "FINAL_DATASET"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "question_7_source_file.json",
+				"folderPath": "Question_7_Source_file",
+				"container": "adf-assignment"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"Actors": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"Born At": {
+								"type": "string"
+							},
+							"Birthdate": {
+								"type": "string"
+							},
+							"photo": {
+								"type": "string"
+							},
+							"wife": {
+								"type": "null"
+							},
+							"weight": {
+								"type": "number"
+							},
+							"hasChildren": {
+								"type": "boolean"
+							},
+							"hasGreyHair": {
+								"type": "boolean"
+							},
+							"children": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

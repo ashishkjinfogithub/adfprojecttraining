@@ -1,0 +1,27 @@
+{
+	"name": "DS_ADF_ASSIGNMENT_SOURCE_1_WITH_SOURCE_HEADER",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "linkedservicestorage",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "FINAL_DATASET"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "ADF_ASSIGNMENT_1_SOURCE_FOLDER",
+				"container": "sa-iris-assignment"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

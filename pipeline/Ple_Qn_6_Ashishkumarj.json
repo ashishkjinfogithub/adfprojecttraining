@@ -1,0 +1,114 @@
+{
+	"name": "Ple_Qn_6_Ashishkumarj",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata_customer_vaccition_details",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "dt_csv_Generic_for_Target_with_header",
+						"type": "DatasetReference",
+						"parameters": {
+							"Directory_Name": "Question_6_Source_File",
+							"Container_Name": "sa-iris-assignment"
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata_customer_vaccition_details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata_customer_vaccition_details').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Data flow1",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "1.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "Df_Qn_6_Ashishkumarj",
+									"type": "DataFlowReference",
+									"parameters": {
+										"Source_File_Name": {
+											"value": "'@{item().name}'",
+											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"source1": {
+											"Directory_Name": "Question_6_Source_File",
+											"Container_Name": "sa-iris-assignment"
+										},
+										"sink1": {
+											"Directory_Name": "Question_6_Target_File",
+											"Container_Name": "sa-iris-assignment"
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"abc": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Assignment"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-01T17:06:06Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

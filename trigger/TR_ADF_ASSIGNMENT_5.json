@@ -1,0 +1,31 @@
+{
+	"name": "TR_ADF_ASSIGNMENT_5",
+	"properties": {
+		"description": "this run n PL_ADF_ASSIGNMENT_MAIN pipeline",
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_ADF_ASSIGNMENT_5_MAIN",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Week",
+				"interval": 15,
+				"startTime": "2021-12-01T11:00:00",
+				"endTime": "2021-12-02T10:00:00",
+				"timeZone": "India Standard Time",
+				"schedule": {
+					"weekDays": [
+						"Thursday"
+					]
+				}
+			}
+		}
+	}
+}

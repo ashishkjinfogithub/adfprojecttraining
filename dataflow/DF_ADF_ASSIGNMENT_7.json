@@ -1,0 +1,85 @@
+{
+	"name": "DF_ADF_ASSIGNMENT_7",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "dt_azure_sql_server_generic",
+						"type": "DatasetReference"
+					},
+					"name": "SourceTable"
+				},
+				{
+					"dataset": {
+						"referenceName": "dt_azure_sql_server_generic",
+						"type": "DatasetReference"
+					},
+					"name": "Targettable"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "dt_azure_sql_server_generic",
+						"type": "DatasetReference"
+					},
+					"name": "updatesink"
+				},
+				{
+					"dataset": {
+						"referenceName": "dt_azure_sql_server_generic",
+						"type": "DatasetReference"
+					},
+					"name": "Insertsink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Select1"
+				},
+				{
+					"name": "Updatefilter"
+				},
+				{
+					"name": "Select2"
+				},
+				{
+					"name": "DerivedColumn1"
+				},
+				{
+					"name": "AlterRow1"
+				},
+				{
+					"name": "Join1"
+				},
+				{
+					"name": "Select5"
+				},
+				{
+					"name": "InsertFilter"
+				},
+				{
+					"name": "SurrogateKey1"
+				},
+				{
+					"name": "DerivedColumn2"
+				},
+				{
+					"name": "Aggregate1"
+				},
+				{
+					"name": "Join2"
+				},
+				{
+					"name": "DerivedColumn3"
+				},
+				{
+					"name": "Select6"
+				}
+			],
+			"script": "parameters{\n\tsql_query as string\n}\nsource(output(\n\t\tmerchant_number as long,\n\t\tphone_number as long,\n\t\tinsert_date as timestamp,\n\t\tupdate_time as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: ($sql_query),\n\tformat: 'query') ~> SourceTable\nsource(output(\n\t\tsurrkey as integer,\n\t\tmerchant_number as long,\n\t\tphone_number as long,\n\t\tinsert_date as timestamp,\n\t\tupdate_time as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> Targettable\nTargettable select(mapColumn(\n\t\ttgt_surrkey = surrkey,\n\t\ttgt_merchant_number = merchant_number,\n\t\ttgt_phone_number = phone_number,\n\t\ttgt_insert_date = insert_date,\n\t\ttgt_update_time = update_time\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect5 filter(equals(merchant_number, tgt_merchant_number)) ~> Updatefilter\nUpdatefilter select(mapColumn(\n\t\tsurrkey = tgt_surrkey,\n\t\tmerchant_number,\n\t\tphone_number,\n\t\tinsert_date,\n\t\tupdate_time\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select2\nSelect2 derive(update_time = currentDate()) ~> DerivedColumn1\nDerivedColumn1 alterRow(updateIf(1==1)) ~> AlterRow1\nSourceTable, Select1 join(merchant_number == tgt_merchant_number,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> Join1\nJoin1 select(mapColumn(\n\t\tmerchant_number,\n\t\tphone_number,\n\t\tinsert_date,\n\t\tupdate_time,\n\t\ttgt_surrkey,\n\t\ttgt_merchant_number,\n\t\ttgt_phone_number,\n\t\ttgt_insert_date,\n\t\ttgt_update_time\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select5\nSelect5 filter(isNull(tgt_merchant_number)) ~> InsertFilter\nInsertFilter keyGenerate(output(new_surrkey as long),\n\tstartAt: 1L) ~> SurrogateKey1\nSelect1 derive(id = 1) ~> DerivedColumn2\nDerivedColumn2 aggregate(groupBy(id),\n\tmax_surrkey = max(tgt_surrkey)) ~> Aggregate1\nSurrogateKey1, Aggregate1 join(1 == 1,\n\tjoinType:'cross',\n\tbroadcast: 'auto')~> Join2\nJoin2 derive(surrkey = iif(isNull(max_surrkey), new_surrkey, new_surrkey + max_surrkey)) ~> DerivedColumn3\nDerivedColumn3 select(mapColumn(\n\t\tsurrkey,\n\t\tmerchant_number,\n\t\tphone_number,\n\t\tinsert_date,\n\t\tupdate_time\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select6\nAlterRow1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:true,\n\tupsertable:false,\n\tkeys:['merchant_number'],\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tsaveOrder: 1,\n\terrorHandlingOption: 'stopOnFirstError') ~> updatesink\nSelect6 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tsaveOrder: 2,\n\terrorHandlingOption: 'stopOnFirstError') ~> Insertsink"
+		}
+	}
+}

@@ -1,0 +1,32 @@
+{
+	"name": "Question_9_dataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "dt_csv_Generic_for_Source_with_header",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "dt_csv_Generic_for_Target_with_header",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn1"
+				}
+			],
+			"script": "source(output(\n\t\tCustomer_Name as string,\n\t\tCustomer_ID as integer,\n\t\tOpen_Date as date,\n\t\tLast_Consulted_Date as date,\n\t\tVaccination_ID as string,\n\t\tDr_Name as string,\n\t\tState as string,\n\t\tCountry as string,\n\t\tDOB as integer,\n\t\tIs_Active as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource1 derive(File_name = 'Question_9_Target_Folder/' + Country + '.csv') ~> DerivedColumn1\nDerivedColumn1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\trowUrlColumn:'File_name',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tmapColumn(\n\t\tCustomer_Name,\n\t\tCustomer_ID,\n\t\tOpen_Date,\n\t\tLast_Consulted_Date,\n\t\tVaccination_ID,\n\t\tDr_Name,\n\t\tState,\n\t\tCountry,\n\t\tDOB,\n\t\tIs_Active\n\t)) ~> sink1"
+		}
+	}
+}

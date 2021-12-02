@@ -1,0 +1,61 @@
+{
+	"name": "DF_ADF_ASSIGNMNET_6_SCD_2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "dt_csv_Generic_for_Source_with_header",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				},
+				{
+					"dataset": {
+						"referenceName": "dt_azure_sql_server_generic",
+						"type": "DatasetReference"
+					},
+					"name": "source2"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "dt_azure_sql_server_generic",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "dt_azure_sql_server_generic",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn1"
+				},
+				{
+					"name": "Join1"
+				},
+				{
+					"name": "Select1"
+				},
+				{
+					"name": "DerivedColumn2"
+				},
+				{
+					"name": "Select2"
+				},
+				{
+					"name": "AlterRow1"
+				}
+			],
+			"script": "source(output(\n\t\tmerchant_number as long,\n\t\tphone_number as long\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource(output(\n\t\tsurrkey as integer,\n\t\tmerchant_number as long,\n\t\tphone_number as long,\n\t\tisactive as integer,\n\t\tinsert_date as timestamp,\n\t\tupdate_time as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> source2\nsource1 derive(isactive = 1,\n\t\tinsert_date = currentDate(),\n\t\tupdate_date = currentDate()) ~> DerivedColumn1\nSelect1, source1 join(target_table_merchant_number == merchant_number,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> Join1\nsource2 select(mapColumn(\n\t\ttarget_table_surrkey = surrkey,\n\t\ttarget_table_merchant_number = merchant_number,\n\t\ttarget_table_phone_number = phone_number,\n\t\ttarget_table_isactive = isactive,\n\t\ttarget_table_insert_date = insert_date,\n\t\ttarget_table_update_time = update_time\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect2 derive(target_table_isactive = 0,\n\t\ttarget_table_update_time = currentDate()) ~> DerivedColumn2\nJoin1 select(mapColumn(\n\t\ttarget_table_surrkey,\n\t\ttarget_table_merchant_number,\n\t\ttarget_table_phone_number,\n\t\ttarget_table_isactive,\n\t\ttarget_table_insert_date,\n\t\ttarget_table_update_time\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select2\nDerivedColumn2 alterRow(updateIf(1==1)) ~> AlterRow1\nDerivedColumn1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tsaveOrder: 2,\n\terrorHandlingOption: 'stopOnFirstError',\n\tmapColumn(\n\t\tmerchant_number,\n\t\tphone_number,\n\t\tisactive,\n\t\tinsert_date,\n\t\tupdate_date\n\t)) ~> sink1\nAlterRow1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:true,\n\tupsertable:false,\n\tkeys:['surrkey'],\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tsaveOrder: 1,\n\terrorHandlingOption: 'stopOnFirstError',\n\tmapColumn(\n\t\tsurrkey = target_table_surrkey,\n\t\tmerchant_number = target_table_merchant_number,\n\t\tphone_number = target_table_phone_number,\n\t\tisactive = target_table_isactive,\n\t\tinsert_date = target_table_insert_date,\n\t\tupdate_time = target_table_update_time\n\t)) ~> sink2"
+		}
+	}
+}

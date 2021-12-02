@@ -1,0 +1,136 @@
+{
+	"name": "PL_ADF_Assignment_7",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup1",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "dt_azure_sql_server_generic",
+						"type": "DatasetReference",
+						"parameters": {
+							"Schema": "dbo",
+							"Table_Name": "static_config_table"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup1').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Data flow1",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "1.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "DF_ADF_ASSIGNMENT_7",
+									"type": "DataFlowReference",
+									"parameters": {
+										"sql_query": {
+											"value": "'@{item().Source_Query}'",
+											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"SourceTable": {
+											"Schema": {
+												"value": "@item().Source_Schema_Name",
+												"type": "Expression"
+											},
+											"Table_Name": {
+												"value": "@item().Source_Table_Name",
+												"type": "Expression"
+											}
+										},
+										"Targettable": {
+											"Schema": {
+												"value": "@item().Target_Schema_Name",
+												"type": "Expression"
+											},
+											"Table_Name": {
+												"value": "@item().Target_Table_Name",
+												"type": "Expression"
+											}
+										},
+										"updatesink": {
+											"Schema": {
+												"value": "@item().Target_Schema_Name",
+												"type": "Expression"
+											},
+											"Table_Name": {
+												"value": "@item().Target_Table_Name",
+												"type": "Expression"
+											}
+										},
+										"Insertsink": {
+											"Schema": {
+												"value": "@item().Target_Schema_Name",
+												"type": "Expression"
+											},
+											"Table_Name": {
+												"value": "@item().Target_Table_Name",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Coarse"
+							}
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "PL_IRIS_ASSIGNMENT"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-01T14:32:14Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

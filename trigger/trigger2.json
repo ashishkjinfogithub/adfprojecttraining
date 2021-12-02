@@ -1,0 +1,18 @@
+{
+	"name": "trigger2",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/adftraining-ashish/blobs/input/",
+			"blobPathEndsWith": "/source_file.txt",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/1eaf782d-d7ff-4098-89ad-ce7c6958954e/resourceGroups/Dev-resource-group/providers/Microsoft.Storage/storageAccounts/azureadftraining",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}

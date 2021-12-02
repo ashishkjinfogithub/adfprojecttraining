@@ -1,0 +1,41 @@
+{
+	"name": "Dfw_Qn_7_Ashishkumarj",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Question_7_Source_File_json",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "dt_csv_Generic_for_Target_with_header",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Select1"
+				},
+				{
+					"name": "DerivedColumn1"
+				},
+				{
+					"name": "Aggregate1"
+				},
+				{
+					"name": "Flatten3"
+				}
+			],
+			"script": "source(output(\n\t\tActors as (name as string, {Born At} as string, Birthdate as string, photo as string, wife as string, weight as double, hasChildren as boolean, hasGreyHair as boolean, children as string[])[]\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tdocumentForm: 'arrayOfDocuments') ~> source1\nFlatten3 select(mapColumn(\n\t\tname,\n\t\tBirthdate,\n\t\tchildren\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 derive(age = year(currentDate())-year(toDate(Birthdate,'MMMMM dd, yyyy','en-US')),\n\t\tDOB_new_format = Birthdate) ~> DerivedColumn1\nDerivedColumn1 aggregate(groupBy(name,\n\t\tBirthdate,\n\t\tage,\n\t\tDOB_new_format),\n\tChildren_Count = count(children)) ~> Aggregate1\nsource1 foldDown(unroll(Actors.children),\n\tmapColumn(\n\t\tname = Actors.name,\n\t\t{Born At} = Actors.{Born At},\n\t\tBirthdate = Actors.Birthdate,\n\t\tphoto = Actors.photo,\n\t\twife = Actors.wife,\n\t\tweight = Actors.weight,\n\t\thasChildren = Actors.hasChildren,\n\t\thasGreyHair = Actors.hasGreyHair,\n\t\tchildren = Actors.children\n\t),\n\tskipDuplicateMapInputs: false,\n\tskipDuplicateMapOutputs: false) ~> Flatten3\nAggregate1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['question_7_target_File'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tmapColumn(\n\t\tname,\n\t\tBirthdate = DOB_new_format,\n\t\tage,\n\t\tChildren_Count\n\t),\n\tpartitionBy('hash', 1)) ~> sink1"
+		}
+	}
+}

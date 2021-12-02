@@ -1,0 +1,41 @@
+{
+	"name": "dt_csv_Generic_for_Target_without_header",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "linkedservicestorage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"Directory_Name": {
+				"type": "string"
+			},
+			"Container_Name": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "FINAL_DATASET"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": {
+					"value": "@dataset().Directory_Name",
+					"type": "Expression"
+				},
+				"container": {
+					"value": "@dataset().Container_Name",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": false,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

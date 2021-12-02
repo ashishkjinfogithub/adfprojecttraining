@@ -1,0 +1,26 @@
+{
+	"name": "unprocessedwithoutdirectoryfileandschema",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "linkedservicestorage",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Demo_Client_Project_dataset"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "unprocessed"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": false,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
